@@ -1,0 +1,78 @@
+<h1>Listing events</h1>
+<% require 'calendar_grid' 
+cal = CalendarGrid.build  %>
+
+    <%= "Calendar from #{cal.first.strftime("%D")} to #{cal.last.strftime("%D")}" %>
+
+<%  cal.years.each do |y| %>
+    <%= y.year %> <br>
+
+<%    y.months.each do |m| 
+      month_grid = "<table border=1>" 
+      month_script = "<script language=\"javascript\" type=\"text/javascript\" defer>\n <!--\n" %>   
+      <%= "<h1>" + m.strftime("%B") + "</h1>" %> 
+<%      m.weeks.each do |w| 
+          month_grid += "<tr>\n"  
+          w.each do |d| 
+            month_grid += d.date.strftime("<td height = '100' width = '100' class = cell id = cell_%Y_%m_%d")
+            if d.proxy?
+              month_grid += ' style="background-color:#CCCCCC;"'
+            else
+              month_grid += ' style="background-color:#FFFFFF;"'
+            end
+            month_grid += d.date.strftime("> <div class = number id = number_%Y_%m_%d> %d </div>")
+            month_script += d.date.strftime("Droppables.add('cell_%Y_%m_%d',{
+                                              onDrop:function(element){
+                                                  $('number_%Y_%m_%d').innerHTML = 'dropped';}});\n")  
+            for event in @events
+              if event.day.strftime("%Y_%m_%d") == d.date.strftime("%Y_%m_%d")                
+                month_grid += "<div id= event_" + event.id.to_s() 
+                month_grid += " >" + event.title + "</div>"
+                month_script += "new Draggable('event_" + event.id.to_s() + "',{revert:true});\n"
+              end
+            end
+            month_grid += "</td>\n"
+          end 
+          month_grid += "</tr>\n"
+        end %>
+      <%= month_grid %>
+      <%    month_script += " // -->\n </script>" %>
+      <%= month_script %>
+      <br></table>
+<%    end
+  end
+%>
+
+<table>
+  <tr>
+    <th>Day</th>
+    <th>Title</th>
+    <th>Description</th>
+  </tr>
+
+<% for event in @events %>
+  <tr>
+    <td><%=h event.day %></td>
+    <td><%=h event.title %></td>
+    <td><%=h event.description %></td>
+    <td><%= link_to 'Show', event %></td>
+    <td><%= link_to 'Edit', edit_event_path(event) %></td>
+    <td><%= link_to 'Destroy', event, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+  <style type="text/css">
+    <%= event.day.strftime("#number_%Y_%m_%d") %> {
+      color:red;
+      vertical-align:top;}
+      .cell {vertical-align:top;}
+      <%= event.day.strftime("#cell_%Y_%m_%d") %> {
+        vertical-align:top;
+        background-color: #FA6607}      
+  </style>
+  
+<% end %>
+</table>
+
+
+<br />
+
+<%= link_to 'New event', new_event_path %>
